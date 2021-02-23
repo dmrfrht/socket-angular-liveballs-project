@@ -1,0 +1,14 @@
+{
+  "name": "socket-angular-liveballs-project",
+  "description": "",
+  "main": "",
+  "authors": [
+    "dmrfrht <dmrfrht1@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/dmrfrht/socket-angular-liveballs-project",
+  "dependencies": {
+    "angular": "^1.8.2",
+    "semantic": "^2.4.1"
+  }
+}
