@@ -20,8 +20,24 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
         socket.emit('newuser', { userName })
         socket.on('newUser', data => {
           const messageData = {
-            type: 0,
+            type: {
+              code: 0,
+              message: 1
+            },
             userName: data.userName
+          }
+
+          $scope.messages.push(messageData)
+          $scope.$apply()
+        })
+
+        socket.on('disUser', user => {
+          const messageData = {
+            type: {
+              code: 0,
+              message: 0
+            },
+            userName: user.userName
           }
 
           $scope.messages.push(messageData)
