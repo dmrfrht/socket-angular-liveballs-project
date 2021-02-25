@@ -19,7 +19,7 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
 
     indexFactory.connectSocket('http://localhost:3000', connectionOptions)
       .then((socket) => {
-        socket.emit('newuser', { userName })
+        socket.emit('newuser', {userName})
 
         socket.on('initPlayers', users => {
           $scope.players = users
@@ -51,6 +51,17 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
           $scope.messages.push(messageData)
           $scope.$apply()
         })
+
+        let animate = false
+        $scope.onClickPlayer = ($event) => {
+          if (!animate) {
+            animate = true
+            $('#' + socket.id).animate({'left': $event.offsetX, 'top': $event.offsetY}, () => {
+              animate = false
+            })
+          }
+
+        }
       })
       .catch((error) => console.log(error))
   }
