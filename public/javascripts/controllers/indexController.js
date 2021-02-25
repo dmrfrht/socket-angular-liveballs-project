@@ -26,98 +26,100 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
     }, 4000)
   }
 
-  function initSocket(userName) {
+  async function initSocket(userName) {
     const connectionOptions = {
       reconnectionAttempts: 3,
       reconnectionDelay: 600
     }
 
-    indexFactory.connectSocket('http://localhost:3000', connectionOptions)
-      .then((socket) => {
-        socket.emit('newuser', {userName})
+    try {
+      const socket = await indexFactory.connectSocket('http://localhost:3000', connectionOptions)
 
-        socket.on('initPlayers', users => {
-          $scope.players = users
-          $scope.$apply()
+      socket.emit('newuser', {userName})
+
+      socket.on('initPlayers', users => {
+        $scope.players = users
+        $scope.$apply()
+      })
+
+      socket.on('newUser', data => {
+        const messageData = {
+          type: {
+            code: 0,
+            message: 1
+          },
+          userName: data.userName
+        }
+
+        $scope.messages.push(messageData)
+        $scope.players[data.id] = data
+        scrollTop()
+        $scope.$apply()
+      })
+
+      socket.on('disUser', data => {
+        const messageData = {
+          type: {
+            code: 0,
+            message: 0
+          },
+          userName: data.userName
+        }
+
+        $scope.messages.push(messageData)
+        delete $scope.players[data.id]
+        scrollTop()
+        $scope.$apply()
+      })
+
+      socket.on('animate', (data) => {
+        $('#' + data.socketId).animate({'left': data.x, 'top': data.y}, () => {
+          animate = false
         })
+      })
 
-        socket.on('newUser', data => {
-          const messageData = {
-            type: {
-              code: 0,
-              message: 1
-            },
-            userName: data.userName
-          }
+      socket.on('newMessage', message => {
+        $scope.messages.push(message)
+        $scope.$apply()
+        showBubble(message.socketId, message.text)
+        scrollTop()
+      })
 
-          $scope.messages.push(messageData)
-          $scope.players[data.id] = data
-          scrollTop()
-          $scope.$apply()
-        })
+      let animate = false
+      $scope.onClickPlayer = ($event) => {
+        if (!animate) {
+          let x = $event.offsetX
+          let y = $event.offsetY
 
-        socket.on('disUser', data => {
-          const messageData = {
-            type: {
-              code: 0,
-              message: 0
-            },
-            userName: data.userName
-          }
+          socket.emit('animate', {x, y})
 
-          $scope.messages.push(messageData)
-          delete $scope.players[data.id]
-          scrollTop()
-          $scope.$apply()
-        })
-
-        socket.on('animate', (data) => {
-          $('#' + data.socketId).animate({'left': data.x, 'top': data.y}, () => {
+          animate = true
+          $('#' + socket.id).animate({'left': x, 'top': y}, () => {
             animate = false
           })
-        })
+        }
+      }
 
-        socket.on('newMessage', message => {
-          $scope.messages.push(message)
-          $scope.$apply()
-          showBubble(message.socketId, message.text)
-          scrollTop()
-        })
-
-        let animate = false
-        $scope.onClickPlayer = ($event) => {
-          if (!animate) {
-            let x = $event.offsetX
-            let y = $event.offsetY
-
-            socket.emit('animate', {x, y})
-
-            animate = true
-            $('#' + socket.id).animate({'left': x, 'top': y}, () => {
-              animate = false
-            })
-          }
+      $scope.newMessage = () => {
+        let message = $scope.message
+        const messageData = {
+          type: {
+            code: 1
+          },
+          userName,
+          text: message
         }
 
-        $scope.newMessage = () => {
-          let message = $scope.message
-          const messageData = {
-            type: {
-              code: 1
-            },
-            userName,
-            text: message
-          }
+        $scope.messages.push(messageData)
+        $scope.message = ''
 
-          $scope.messages.push(messageData)
-          $scope.message = ''
+        socket.emit('newMessage', messageData)
 
-          socket.emit('newMessage', messageData)
-
-          showBubble(socket.id, message)
-          scrollTop()
-        }
-      })
-      .catch((error) => console.log(error))
+        showBubble(socket.id, message)
+        scrollTop()
+      }
+    } catch (e) {
+      console.log(e)
+    }
   }
 }])
