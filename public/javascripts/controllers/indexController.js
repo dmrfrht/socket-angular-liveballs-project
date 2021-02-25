@@ -40,25 +40,36 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
           $scope.$apply()
         })
 
-        socket.on('disUser', user => {
+        socket.on('disUser', data => {
           const messageData = {
             type: {
               code: 0,
               message: 0
             },
-            userName: user.userName
+            userName: data.userName
           }
 
           $scope.messages.push(messageData)
-          delete $scope.players[user.id]
+          delete $scope.players[data.id]
           $scope.$apply()
+        })
+
+        socket.on('animate', (data) => {
+          $('#' + data.socketId).animate({'left': data.x, 'top': data.y}, () => {
+            animate = false
+          })
         })
 
         let animate = false
         $scope.onClickPlayer = ($event) => {
           if (!animate) {
+            let x = $event.offsetX
+            let y = $event.offsetY
+
+            socket.emit('animate', {x, y})
+
             animate = true
-            $('#' + socket.id).animate({'left': $event.offsetX, 'top': $event.offsetY}, () => {
+            $('#' + socket.id).animate({'left': x, 'top': y}, () => {
               animate = false
             })
           }
