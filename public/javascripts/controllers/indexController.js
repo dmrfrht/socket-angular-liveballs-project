@@ -2,6 +2,8 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
 
   $scope.messages = []
 
+  $scope.players = {}
+
   $scope.init = () => {
     const userName = prompt("Please enter username")
 
@@ -18,6 +20,12 @@ app.controller('indexController', ['$scope', 'indexFactory', ($scope, indexFacto
     indexFactory.connectSocket('http://localhost:3000', connectionOptions)
       .then((socket) => {
         socket.emit('newuser', { userName })
+
+        socket.on('initPlayers', users => {
+          $scope.players = users
+          $scope.$apply()
+        })
+
         socket.on('newUser', data => {
           const messageData = {
             type: {
